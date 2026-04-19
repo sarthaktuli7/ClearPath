@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClearPath — Interactive Prototype</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F4FA;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px}
+  .header{width:100%;max-width:480px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .logo{font-size:20px;font-weight:700;color:#0891B2;letter-spacing:-0.5px}
+  .logo span{color:#0D1B2A}
+  .tag{font-size:11px;background:#E0F2FE;color:#0891B2;padding:4px 10px;border-radius:20px;font-weight:600}
+  .screen-tabs{display:flex;gap:6px;flex-wrap:wrap;max-width:480px;width:100%;margin-bottom:20px}
+  .tab{flex:1;min-width:80px;padding:7px 8px;border-radius:8px;border:1px solid #CBD5E1;background:#fff;font-size:11px;font-weight:600;color:#475569;cursor:pointer;text-align:center;transition:all 0.15s}
+  .tab.active{background:#0891B2;color:#fff;border-color:#0891B2}
+  .tab:hover:not(.active){border-color:#0891B2;color:#0891B2}
+  .phone{width:100%;max-width:380px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(13,27,42,0.15);min-height:680px;display:flex;flex-direction:column}
+  .screen{display:none;flex-direction:column;min-height:680px}
+  .screen.active{display:flex}
+  /* topbar */
+  .topbar{background:#0D1B2A;padding:16px 18px 12px;flex-shrink:0}
+  .topbar-name{font-size:15px;font-weight:700;color:#BAE6FD;letter-spacing:0.2px}
+  .topbar-sub{font-size:11px;color:#64748B;margin-top:2px}
+  .topbar-back{font-size:12px;color:#64748B;cursor:pointer;margin-bottom:4px;display:inline-block}
+  .topbar-back:hover{color:#BAE6FD}
+  /* body */
+  .body{flex:1;padding:18px;overflow-y:auto}
+  /* tags */
+  .pill{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:12px;letter-spacing:0.3px}
+  .pill-teal{background:#E0F2FE;color:#0891B2}
+  .pill-gold{background:#FEF3C7;color:#D97706}
+  .pill-green{background:#D1FAE5;color:#059669}
+  .pill-slate{background:#F1F5F9;color:#475569}
+  .pill-red{background:#FEE2E2;color:#DC2626}
+  /* headings */
+  .h1{font-size:20px;font-weight:700;color:#0D1B2A;margin-bottom:6px;line-height:1.3}
+  .sub{font-size:13px;color:#475569;line-height:1.6;margin-bottom:18px}
+  /* cards */
+  .card{background:#F8FAFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .card-label{font-size:10px;font-weight:700;color:#94A3B8;letter-spacing:0.8px;margin-bottom:8px;text-transform:uppercase}
+  /* pref buttons */
+  .pref-row{display:flex;flex-wrap:wrap;gap:7px}
+  .pref-btn{font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid #CBD5E1;background:#fff;color:#475569;cursor:pointer;transition:all 0.15s;font-weight:500}
+  .pref-btn.sel{background:#0D1B2A;color:#BAE6FD;border-color:#0891B2}
+  .pref-btn:hover:not(.sel){border-color:#0891B2;color:#0D1B2A}
+  /* slider */
+  .slider-row{display:flex;align-items:center;gap:12px;margin-top:8px}
+  input[type=range]{flex:1;accent-color:#0891B2}
+  .slider-val{font-size:13px;font-weight:700;color:#0D1B2A;min-width:48px}
+  /* buttons */
+  .btn{width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;margin-top:6px;transition:all 0.15s}
+  .btn-primary{background:#0891B2;color:#fff}
+  .btn-primary:hover{background:#0D1B2A}
+  .btn-secondary{background:transparent;color:#0891B2;border:2px solid #0891B2}
+  .btn-secondary:hover{background:#E0F2FE}
+  /* week path */
+  .week-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .week-title{font-size:13px;font-weight:700;color:#475569}
+  .progress-wrap{background:#E2E8F0;border-radius:4px;height:7px;margin-bottom:4px}
+  .progress-fill{height:7px;border-radius:4px;background:#0891B2;transition:width 0.4s}
+  .progress-meta{display:flex;justify-content:space-between;font-size:11px;color:#94A3B8;margin-bottom:14px}
+  .task{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+  .task:hover{border-color:#0891B2}
+  .task-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+  .task-title{font-size:13px;font-weight:600;color:#0D1B2A;display:flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .dot-red{background:#DC2626}
+  .dot-amber{background:#D97706}
+  .dot-green{background:#059669}
+  .dot-teal{background:#0891B2}
+  .task-time{font-size:11px;color:#94A3B8;font-weight:600}
+  .task-sub{font-size:11px;color:#94A3B8}
+  .task-done{opacity:0.5;background:#F8FAFF}
+  .task-done .task-title{text-decoration:line-through;color:#94A3B8}
+  /* recall */
+  .recall-box{background:#0D1B2A;border-radius:12px;padding:16px;margin-bottom:14px}
+  .recall-q{font-size:13px;color:#E2E8F0;line-height:1.65;margin-bottom:6px;font-weight:500}
+  .recall-hint{font-size:11px;color:#475569}
+  textarea{width:100%;background:#F8FAFF;border:1.5px solid #CBD5E1;border-radius:10px;padding:11px 13px;font-size:13px;color:#0D1B2A;resize:none;min-height:90px;font-family:inherit;transition:border-color 0.15s}
+  textarea:focus{outline:none;border-color:#0891B2}
+  .answer-reveal{background:#D1FAE5;border-radius:10px;padding:14px;margin-bottom:14px;display:none}
+  .answer-label{font-size:10px;font-weight:700;color:#059669;letter-spacing:0.5px;margin-bottom:6px}
+  .answer-text{font-size:13px;color:#065F46;line-height:1.65}
+  /* progress */
+  .streak-row{display:flex;gap:6px;margin-bottom:18px}
+  .streak-day{flex:1;text-align:center}
+  .streak-c{width:34px;height:34px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+  .done{background:#0891B2;color:#fff}
+  .today{background:#E0F2FE;border:2px solid #0891B2;color:#0891B2}
+  .empty{background:#F1F5F9;color:#94A3B8}
+  .streak-lbl{font-size:10px;color:#94A3B8}
+  .score-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+  .score-card{background:#F8FAFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 8px;text-align:center}
+  .score-num{font-size:22px;font-weight:700}
+  .score-lbl{font-size:10px;color:#94A3B8;margin-top:3px}
+  .topic-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .topic-name{font-size:12px;color:#0D1B2A;width:100px;flex-shrink:0;font-weight:500}
+  .topic-bar-bg{flex:1;background:#E2E8F0;border-radius:4px;height:8px}
+  .topic-bar{height:8px;border-radius:4px}
+  .topic-pct{font-size:11px;color:#94A3B8;width:32px;text-align:right;font-weight:600}
+  .insight-box{background:#FEF3C7;border:1px solid #D97706;border-radius:10px;padding:12px 14px}
+  .insight-label{font-size:10px;font-weight:700;color:#D97706;margin-bottom:4px;letter-spacing:0.5px}
+  .insight-text{font-size:12px;color:#78350F;line-height:1.55}
+  /* upload */
+  .upload-zone{border:2px dashed #CBD5E1;border-radius:12px;padding:22px;text-align:center;margin-bottom:14px;cursor:pointer;transition:border-color 0.15s}
+  .upload-zone:hover{border-color:#0891B2}
+  .upload-icon{font-size:26px;margin-bottom:8px}
+  .upload-sub{font-size:12px;color:#94A3B8;margin-top:4px}
+  .file-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .chip{background:#F1F5F9;border:1px solid #E2E8F0;border-radius:20px;padding:4px 12px;font-size:11px;color:#475569;font-weight:500}
+  .coming-soon{background:#F8FAFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .cs-label{font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:0.5px;margin-bottom:2px}
+  .cs-val{font-size:13px;font-weight:600;color:#0D1B2A}
+  .cs-badge{font-size:10px;background:#E0F2FE;color:#0891B2;padding:3px 8px;border-radius:12px;font-weight:600}
+  .privacy-box{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:12px 14px}
+  .privacy-label{font-size:10px;font-weight:700;color:#1D4ED8;margin-bottom:4px;letter-spacing:0.5px}
+  .privacy-text{font-size:12px;color:#1E40AF;line-height:1.55}
+  /* nav */
+  .nav-bottom{display:flex;background:#0D1B2A;padding:10px 0 8px;flex-shrink:0}
+  .nav-item{flex:1;text-align:center;cursor:pointer;padding:4px}
+  .nav-icon{font-size:17px;margin-bottom:2px}
+  .nav-lbl{font-size:10px;color:#475569;font-weight:600}
+  .nav-item.active .nav-lbl{color:#BAE6FD}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><span>Clear</span>Path</div>
+  <div class="tag">Interactive Prototype</div>
+</div>
+
+<div class="screen-tabs" id="tabs">
+  <div class="tab active" onclick="goTo('onboard')" data-s="onboard">1. Onboarding</div>
+  <div class="tab" onclick="goTo('path')" data-s="path">2. My Path</div>
+  <div class="tab" onclick="goTo('recall')" data-s="recall">3. Active Recall</div>
+  <div class="tab" onclick="goTo('progress')" data-s="progress">4. Progress</div>
+  <div class="tab" onclick="goTo('upload')" data-s="upload">5. Materials</div>
+</div>
+
+<div class="phone">
+
+  <!-- SCREEN 1: ONBOARDING -->
+  <div class="screen active" id="screen-onboard">
+    <div class="topbar">
+      <div class="topbar-name">ClearPath</div>
+      <div class="topbar-sub">Your personal learning OS</div>
+    </div>
+    <div class="body">
+      <div class="pill pill-teal">Setup — 2 min</div>
+      <div class="h1">How do you learn best?</div>
+      <div class="sub">We build your weekly study path around this. You can change it anytime.</div>
+
+      <div class="card">
+        <div class="card-label">Preferred format</div>
+        <div class="pref-row">
+          <div class="pref-btn sel" onclick="toggle(this)">Visual breakdown</div>
+          <div class="pref-btn" onclick="toggle(this)">Audio summary</div>
+          <div class="pref-btn" onclick="toggle(this)">Short notes</div>
+          <div class="pref-btn" onclick="toggle(this)">Examples first</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Language preference</div>
+        <div class="pref-row">
+          <div class="pref-btn sel" onclick="toggle(this)">English</div>
+          <div class="pref-btn" onclick="toggle(this)">Simplified English</div>
+          <div class="pref-btn" onclick="toggle(this)">Hindi</div>
+          <div class="pref-btn" onclick="toggle(this)">Mandarin</div>
+          <div class="pref-btn" onclick="toggle(this)">Spanish</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Available study time per week</div>
+        <div class="slider-row">
+          <input type="range" min="2" max="20" value="8" id="time-slider" step="1" oninput="document.getElementById('time-out').textContent=this.value+' hrs'">
+          <span class="slider-val" id="time-out">8 hrs</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="goTo('path')">Build my path →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: WEEKLY PATH -->
+  <div class="screen" id="screen-path">
+    <div class="topbar">
+      <div class="topbar-name">ClearPath</div>
+      <div class="topbar-sub">BUA 605 — Business Analytics</div>
+    </div>
+    <div class="body">
+      <div class="week-meta">
+        <span class="week-title">Week 11 study path</span>
+        <span class="pill pill-teal" style="margin:0">3 of 5 done</span>
+      </div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:60%"></div></div>
+      <div class="progress-meta"><span>60% complete</span><span>~3.5 hrs left</span></div>
+
+      <div class="task" onclick="goTo('recall')">
+        <div class="task-row">
+          <span class="task-title"><span class="dot dot-red"></span>Regression analysis</span>
+          <span class="task-time">45 min</span>
+        </div>
+        <div class="task-sub">Your weakest topic this week — tap to start active recall</div>
+      </div>
+
+      <div class="task">
+        <div class="task-row">
+          <span class="task-title"><span class="dot dot-amber"></span>Case study review</span>
+          <span class="task-time">30 min</span>
+        </div>
+        <div class="task-sub">Walmart supply chain — exam question likely</div>
+      </div>
+
+      <div class="task" style="opacity:0.55">
+        <div class="task-row">
+          <span class="task-title"><span class="dot dot-green"></span>Quiz practice</span>
+          <span class="task-time">20 min</span>
+        </div>
+        <div class="task-sub">5 questions on forecasting — do after regression</div>
+      </div>
+
+      <div class="task task-done">
+        <div class="task-row">
+          <span class="task-title"><span class="dot dot-teal"></span>Data visualization types</span>
+          <span class="pill pill-green" style="margin:0;font-size:10px;padding:2px 8px">Done</span>
+        </div>
+      </div>
+
+      <div class="task task-done">
+        <div class="task-row">
+          <span class="task-title"><span class="dot dot-teal"></span>Reading: Ch 8 summary</span>
+          <span class="pill pill-green" style="margin:0;font-size:10px;padding:2px 8px">Done</span>
+        </div>
+      </div>
+    </div>
+    <div class="nav-bottom">
+      <div class="nav-item active"><div class="nav-icon">📍</div><div class="nav-lbl" style="color:#BAE6FD">Path</div></div>
+      <div class="nav-item" onclick="goTo('progress')"><div class="nav-icon">📊</div><div class="nav-lbl">Progress</div></div>
+      <div class="nav-item" onclick="goTo('upload')"><div class="nav-icon">📂</div><div class="nav-lbl">Materials</div></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: ACTIVE RECALL -->
+  <div class="screen" id="screen-recall">
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('path')">← Back to path</div>
+      <div class="topbar-name">Regression analysis</div>
+      <div class="topbar-sub">Checkpoint 1 of 3</div>
+    </div>
+    <div class="body">
+      <div class="pill pill-gold">Active recall</div>
+      <div class="h1">Before we explain — you try first.</div>
+      <div class="sub">This is how you actually learn. Not by reading. By producing an answer yourself.</div>
+
+      <div class="recall-box">
+        <div class="recall-q">In your own words — what is the difference between R-squared and adjusted R-squared? When would you prefer adjusted R-squared?</div>
+        <div class="recall-hint" style="margin-top:6px">From Lecture 11 — Prof. Williams flagged this for the final exam</div>
+      </div>
+
+      <textarea placeholder="Type your answer here. Don't look it up — just try your best." id="recall-answer"></textarea>
+
+      <div class="answer-reveal" id="answer-box">
+        <div class="answer-label">COURSE EXPLANATION — LECTURE 11</div>
+        <div class="answer-text">R-squared measures the proportion of variance explained by the model, but it increases automatically when you add more predictors — even if they add no real value. Adjusted R-squared corrects for this by penalizing unnecessary variables. Use adjusted R-squared when comparing models with different numbers of predictors.</div>
+      </div>
+
+      <button class="btn btn-primary" id="reveal-btn" onclick="revealAnswer()">Submit and see explanation</button>
+      <button class="btn btn-secondary" id="next-btn" style="display:none" onclick="goTo('path')">Next checkpoint →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: PROGRESS -->
+  <div class="screen" id="screen-progress">
+    <div class="topbar">
+      <div class="topbar-name">ClearPath</div>
+      <div class="topbar-sub">Your progress</div>
+    </div>
+    <div class="body">
+      <div class="pill pill-teal">Week 11</div>
+      <div class="h1">You're on track.</div>
+
+      <div class="streak-row">
+        <div class="streak-day"><div class="streak-c done">M</div><div class="streak-lbl">Mon</div></div>
+        <div class="streak-day"><div class="streak-c done">T</div><div class="streak-lbl">Tue</div></div>
+        <div class="streak-day"><div class="streak-c done">W</div><div class="streak-lbl">Wed</div></div>
+        <div class="streak-day"><div class="streak-c today">T</div><div class="streak-lbl">Today</div></div>
+        <div class="streak-day"><div class="streak-c empty">F</div><div class="streak-lbl">Fri</div></div>
+        <div class="streak-day"><div class="streak-c empty">S</div><div class="streak-lbl">Sat</div></div>
+        <div class="streak-day"><div class="streak-c empty">S</div><div class="streak-lbl">Sun</div></div>
+      </div>
+
+      <div class="score-grid">
+        <div class="score-card"><div class="score-num" style="color:#0891B2">74%</div><div class="score-lbl">Comprehension</div></div>
+        <div class="score-card"><div class="score-num" style="color:#D97706">12</div><div class="score-lbl">Day streak</div></div>
+        <div class="score-card"><div class="score-num" style="color:#059669">6.2h</div><div class="score-lbl">This week</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Topic comprehension</div>
+        <div class="topic-row"><div class="topic-name">Data viz</div><div class="topic-bar-bg"><div class="topic-bar" style="width:92%;background:#059669"></div></div><div class="topic-pct">92%</div></div>
+        <div class="topic-row"><div class="topic-name">Forecasting</div><div class="topic-bar-bg"><div class="topic-bar" style="width:78%;background:#D97706"></div></div><div class="topic-pct">78%</div></div>
+        <div class="topic-row"><div class="topic-name">Regression</div><div class="topic-bar-bg"><div class="topic-bar" style="width:45%;background:#DC2626"></div></div><div class="topic-pct">45%</div></div>
+        <div class="topic-row"><div class="topic-name">Case analysis</div><div class="topic-bar-bg"><div class="topic-bar" style="width:61%;background:#D97706"></div></div><div class="topic-pct">61%</div></div>
+      </div>
+
+      <div class="insight-box">
+        <div class="insight-label">CLEARPATH SUGGESTS</div>
+        <div class="insight-text">Regression is your weakest area and your exam is in 8 days. Your path this week prioritizes it first — 45 min today will make a real difference.</div>
+      </div>
+    </div>
+    <div class="nav-bottom">
+      <div class="nav-item" onclick="goTo('path')"><div class="nav-icon">📍</div><div class="nav-lbl">Path</div></div>
+      <div class="nav-item active"><div class="nav-icon">📊</div><div class="nav-lbl" style="color:#BAE6FD">Progress</div></div>
+      <div class="nav-item" onclick="goTo('upload')"><div class="nav-icon">📂</div><div class="nav-lbl">Materials</div></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: UPLOAD -->
+  <div class="screen" id="screen-upload">
+    <div class="topbar">
+      <div class="topbar-name">ClearPath</div>
+      <div class="topbar-sub">Course materials</div>
+    </div>
+    <div class="body">
+      <div style="display:flex;gap:0;border-bottom:1px solid #E2E8F0;margin-bottom:16px">
+        <div style="flex:1;text-align:center;padding:9px;font-size:12px;font-weight:700;color:#0891B2;border-bottom:2px solid #0891B2">BUA 605</div>
+        <div style="flex:1;text-align:center;padding:9px;font-size:12px;color:#94A3B8;cursor:pointer">BUA 612</div>
+        <div style="flex:1;text-align:center;padding:9px;font-size:12px;color:#0891B2;cursor:pointer">+ Add course</div>
+      </div>
+
+      <div class="upload-zone">
+        <div class="upload-icon">📎</div>
+        <div style="font-size:13px;font-weight:600;color:#475569">Drop syllabus, notes, slides</div>
+        <div class="upload-sub">PDF, PPTX, DOCX — your data stays yours</div>
+      </div>
+
+      <div class="card-label" style="margin-bottom:8px">Uploaded this semester</div>
+      <div class="file-chips">
+        <div class="chip">📄 Syllabus_BUA605.pdf</div>
+        <div class="chip">📊 Lecture_1-5.pptx</div>
+        <div class="chip">📊 Lecture_6-10.pptx</div>
+        <div class="chip">📄 Case_Walmart.pdf</div>
+        <div class="chip">📄 Ch7-8_reading.pdf</div>
+      </div>
+
+      <div class="coming-soon">
+        <div>
+          <div class="cs-label">Auto-sync</div>
+          <div class="cs-val">Connect to Blackboard</div>
+        </div>
+        <div class="cs-badge">Coming soon</div>
+      </div>
+
+      <div class="privacy-box">
+        <div class="privacy-label">PRIVACY FIRST</div>
+        <div class="privacy-text">Your materials are private to you. No professor can see your activity. No data is shared without your consent. FERPA compliant.</div>
+      </div>
+    </div>
+    <div class="nav-bottom">
+      <div class="nav-item" onclick="goTo('path')"><div class="nav-icon">📍</div><div class="nav-lbl">Path</div></div>
+      <div class="nav-item" onclick="goTo('progress')"><div class="nav-icon">📊</div><div class="nav-lbl">Progress</div></div>
+      <div class="nav-item active"><div class="nav-icon">📂</div><div class="nav-lbl" style="color:#BAE6FD">Materials</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;font-size:11px;color:#94A3B8;text-align:center">ClearPath — JHPMC Product Hackathon 2026 • Team SU, Whitman School of Management, Syracuse University</div>
+
+<script>
+function goTo(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.s === name));
+  if (name === 'recall') {
+    document.getElementById('recall-answer').value = '';
+    document.getElementById('answer-box').style.display = 'none';
+    document.getElementById('reveal-btn').style.display = 'block';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('recall-answer').style.borderColor = '#CBD5E1';
+  }
+}
+function toggle(el) { el.classList.toggle('sel'); }
+function revealAnswer() {
+  const ans = document.getElementById('recall-answer').value.trim();
+  if (!ans) {
+    document.getElementById('recall-answer').style.borderColor = '#DC2626';
+    document.getElementById('recall-answer').placeholder = 'Please write something first — even a rough attempt counts.';
+    return;
+  }
+  document.getElementById('recall-answer').style.borderColor = '#059669';
+  document.getElementById('answer-box').style.display = 'block';
+  document.getElementById('reveal-btn').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'block';
+}
+</script>
+</body>
+</html>
